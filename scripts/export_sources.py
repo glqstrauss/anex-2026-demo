@@ -7,7 +7,8 @@ from urllib.parse import quote_plus
 import duckdb
 import typer
 
-DEFAULT_DB_PATH = Path(__file__).parent.parent / "data/civil_service.duckdb"
+DEFAULT_DB_PATH = Path(__file__).parent.parent / "data/dev.duckdb"
+SOURCE_SCHEMA = "nyc_open_data"
 
 
 @dataclass
@@ -72,28 +73,24 @@ def main(
     conn.execute("INSTALL httpfs")
     conn.execute("LOAD httpfs")
 
-    auth = f"Basic {base64.b64encode(f'{api_key}:{api_key_secret}'.encode()).decode()}"
-    conn.execute(
-        f"CREATE SECRET http_auth (TYPE http, EXTRA_HTTP_HEADERS MAP {{'Authorization': '{auth}'}})",
-    )
+    prepare_http(conn, api_key, api_key_secret, http_proxy)
 
-    if http_proxy:
-        conn.execute(f"CREATE SECRET http_proxy (TYPE http, HTTP_PROXY '{http_proxy}')")
+    conn.execute(f"CREATE OR REPLACE SCHEMA {SOURCE_SCHEMA}")
 
     for dataset in DATASETS:
         typer.echo(f"Exporting {dataset.name} from {dataset.url}")
         conn.execute(
-            f"CREATE OR REPLACE TABLE {dataset.name} AS SELECT * FROM read_csv('{dataset.url}', normalize_names=true)",
+            f"CREATE OR REPLACE TABLE {SOURCE_SCHEMA}.{dataset.name} AS SELECT * FROM read_csv('{dataset.url}', normalize_names=true)",
         )
         conn.execute(
-            f"COMMENT ON TABLE {dataset.name} IS 'Exported from {dataset.url} at {datetime.now()}'"
+            f"COMMENT ON TABLE {SOURCE_SCHEMA}.{dataset.name} IS 'Exported from {dataset.url} at {datetime.now()}'"
         )
 
     typer.echo("Export complete.")
     typer.echo(
         str(
             conn.query(
-                "from duckdb_tables() select table_name, estimated_size as row_count, column_count"
+                "from duckdb_tables() select schema_name, table_name, estimated_size as row_count, column_count"
             )
         )
     )
