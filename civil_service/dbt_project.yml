@@ -1,0 +1,17 @@
+name: 'civil_service'
+version: '1.0.0'
+
+profile: 'civil_service'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  civil_service:
+    +schema: civil_service
+    +materialized: table

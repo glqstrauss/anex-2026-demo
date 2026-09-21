@@ -1,6 +1,10 @@
 .venv
 
+.user.yml
+
 data/
 logs/
+dbt_packages/
+target/
 
 local.env
