@@ -5,9 +5,9 @@ select
 	std_hrs as standard_hours,
 	asg_lvl as assignment_level,
 	union_cd as union_code,
-	union_descr as union_description,
-	barg_unit as bargaining_unit,
-	barg_descr as bargaining_description,
-	min_rate,
-	max_rate,
-	investigation_before_appointment as requires_investigation
+	union_descr as union_desc,
+	barg_unit as bargaining_unit_code,
+	barg_descr as bargaining_unit_desc,
+	min_rate as min_salary_rate,
+	max_rate as max_salary_rate,
+	investigation_before_appointment as investigation_before_appointment

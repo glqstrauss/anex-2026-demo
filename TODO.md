@@ -1,0 +1,8 @@
+- Pick demo dataset
+  - Citibike trips
+  - FHV trips
+  - Restaurant inspections
+  - Civil Service
+    - Titles: nzjr-3966
+    - Civil List: https://data.cityofnewyork.us/resource/ye3c-m4ga.json
+    - Jobs: kpav-sd4t
