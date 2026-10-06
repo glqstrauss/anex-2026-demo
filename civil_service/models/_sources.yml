@@ -1,8 +1,0 @@
-sources:
-  - name: nyc_open_data
-    schema: nyc_open_data
-    
-    tables:
-      - name: job_postings
-      - name: civil_list
-      - name: civil_service_titles

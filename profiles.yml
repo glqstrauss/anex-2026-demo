@@ -1,0 +1,12 @@
+config:
+  send_anonymous_usage_stats: False
+
+# Relative paths resolve against the directory dbt is run from (the repo root).
+civil_service:
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'data/dev.duckdb') }}"
+      threads: 1
+
+  target: dev

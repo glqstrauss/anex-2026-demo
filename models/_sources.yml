@@ -1,0 +1,12 @@
+sources:
+  - name: nyc_open_data
+    description: Parquet snapshots of NYC Open Data, produced by scripts/export_sources.py.
+    config:
+      meta:
+        # dbt-duckdb reads these files directly, so there's no load step.
+        external_location: "{{ env_var('SNAPSHOT_DIR', 'data/snapshots') }}/{name}.parquet"
+
+    tables:
+      - name: job_postings
+      - name: civil_list
+      - name: civil_service_titles
