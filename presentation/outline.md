@@ -1,6 +1,7 @@
 # Move Fast, Don't Break Things (with dbt)
 
 ## Introduction
+
 - Gabriel Strauss, Senior Data Engineer at OTI
 - The data engineering team:
   - builds and maintains a wide range of data products that support analytics and reporting needs across the city.
@@ -18,7 +19,7 @@
 - dbt is a free and open-source framework to transform and test data.
   - Define data transformations as code, making them version-controlled and testable.
   - Supports modularity and reusability with macros and packages.
-  - Declarative approach - write SELECTs, let dbt handle DDL. 
+  - Declarative approach - write SELECTs, let dbt handle DDL.
 
 See https://cityshare.nycnet/intranets/anex/assets/anex/downloads/McCullough-Slides.pdf
 
@@ -31,18 +32,14 @@ See https://cityshare.nycnet/intranets/anex/assets/anex/downloads/McCullough-Sli
 # dbt Principles
 
 Data transformations are:
-  - Declarative
-  - Idempotent
-  - Acyclic
+
+- Declarative
+- Idempotent
+- Acyclic
 
 # Real-life horror stories
 
-Things you can do in an imperative pipeline:
-    - `CALL mysteriously_named_stored_procedure()`
-    - Two unrelated transformations that update the same table.
-    - "SQL Override"
-    - Default columns
-    - Powercenter vs database processing
+Things you can do in an imperative pipeline: - `CALL mysteriously_named_stored_procedure()` - Two unrelated transformations that update the same table. - "SQL Override" - Default columns - Powercenter vs database processing
 
 No one source of truth!
 
@@ -59,9 +56,10 @@ PARSE -> COMPILE -> RUN
 # Continuous Integration
 
 Goals:
-  - Find problems early.
-  - Maintain quality and consistency.
-  - Deliver faster.
+
+- Find problems early.
+- Maintain quality and consistency.
+- Deliver faster.
 
 # Ingredients we're working with
 
@@ -73,11 +71,11 @@ Goals:
 
 - Ingredients: manifest
 - automatically check project conventions
-    - line length
-    - naming conventions
-    - dependencies
-    - documentation
-    - etc
+  - line length
+  - naming conventions
+  - dependencies
+  - documentation
+  - etc
 
 # Data validation
 
@@ -89,8 +87,8 @@ Goals:
   - Now use dbt state
 - compare `main` branch manifest to current branch manifest.
 - How do we build the models in an isolated environment?
-    - remember: read-only sources. 
-    - `generate_schema_name` to create isolated schemas for CI.
+  - remember: read-only sources.
+  - `generate_schema_name` to create isolated schemas for CI.
 
 # This can still be a bit slow and expensive
 
@@ -98,7 +96,7 @@ Goals:
 
 # We're not there yet
 
-- We aren't using `defer` yet 
+- We aren't using `defer` yet
 - For automated CI, we are using the `--empty` flag, just ensuring the SQL "compiles"
 - Dev manually triggers the full build pipeline.
 - QA is still manual
@@ -106,3 +104,4 @@ Goals:
 # dbt is not a magic bullet
 
 - dbt itself is nothing special, the important thing is that everything lives in the version-controlled code.
+- You could do this same thing with a bag of DDLs. The problem is it all comes crashing down the minute someone goes and makes a manual change.
