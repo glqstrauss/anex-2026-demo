@@ -6,3 +6,4 @@ select
   min_salary_rate,
   max_salary_rate,
 from {{ ref("stg_civil_service_titles") }}
+-- making a throwaway change to trigger CI....
