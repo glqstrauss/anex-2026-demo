@@ -1,6 +1,3 @@
-config:
-  send_anonymous_usage_stats: False
-
 # Relative paths resolve against the directory dbt is run from (the repo root).
 civil_service:
   outputs:
