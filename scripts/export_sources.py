@@ -7,8 +7,7 @@ from urllib.parse import quote_plus
 import duckdb
 import typer
 
-DEFAULT_DB_PATH = Path(__file__).parent.parent / "data/dev.duckdb"
-SOURCE_SCHEMA = "nyc_open_data"
+DEFAULT_SNAPSHOT_DIR = Path(__file__).parent.parent / "data/snapshots"
 
 
 @dataclass
@@ -61,36 +60,53 @@ def main(
     api_key: str = typer.Option(envvar="OPEN_DATA_API_KEY"),
     api_key_secret: str = typer.Option(envvar="OPEN_DATA_API_KEY_SECRET"),
     http_proxy: str | None = typer.Option(default=None, envvar="HTTP_PROXY"),
-    db_path: Path = typer.Option(default=DEFAULT_DB_PATH, envvar="DB_PATH"),
+    snapshot_dir: Path = typer.Option(default=DEFAULT_SNAPSHOT_DIR, envvar="SNAPSHOT_DIR"),
 ):
+    """Snapshot NYC Open Data sources to Parquet files, one per dataset.
+
+    The snapshots are committed to the repo so that dbt builds (local, CI and
+    prod) all run against identical source data without network access.
+    """
     if not http_proxy:
         typer.echo(
             "HTTP_PROXY is not set. If running from a City network, this may cause connectivity issues.",
             color="yellow",
         )
 
-    conn = duckdb.connect(db_path)
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+
+    conn = duckdb.connect()
     conn.execute("INSTALL httpfs")
     conn.execute("LOAD httpfs")
 
     prepare_http(conn, api_key, api_key_secret, http_proxy)
 
-    conn.execute(f"CREATE OR REPLACE SCHEMA {SOURCE_SCHEMA}")
-
     for dataset in DATASETS:
-        typer.echo(f"Exporting {dataset.name} from {dataset.url}")
+        path = snapshot_dir / f"{dataset.name}.parquet"
+        typer.echo(f"Exporting {dataset.name} from {dataset.url} to {path}")
         conn.execute(
-            f"CREATE OR REPLACE TABLE {SOURCE_SCHEMA}.{dataset.name} AS SELECT * FROM read_csv('{dataset.url}', normalize_names=true)",
-        )
-        conn.execute(
-            f"COMMENT ON TABLE {SOURCE_SCHEMA}.{dataset.name} IS 'Exported from {dataset.url} at {datetime.now()}'"
+            f"""
+            COPY (SELECT * FROM read_csv('{dataset.url}', normalize_names=true))
+            TO '{path}' (
+                FORMAT parquet,
+                COMPRESSION zstd,
+                KV_METADATA {{source_url: '{dataset.url}', exported_at: '{datetime.now().isoformat()}'}}
+            )
+            """
         )
 
     typer.echo("Export complete.")
     typer.echo(
         str(
             conn.query(
-                "from duckdb_tables() select schema_name, table_name, estimated_size as row_count, column_count"
+                f"""
+                select
+                    parse_filename(filename, true) as dataset,
+                    count(*) as row_count
+                from read_parquet('{snapshot_dir}/*.parquet', filename=true, union_by_name=true)
+                group by all
+                order by dataset
+                """
             )
         )
     )

@@ -2,7 +2,9 @@
 
 .user.yml
 
-data/
+data/*
+!data/snapshots/
+
 logs/
 dbt_packages/
 target/
