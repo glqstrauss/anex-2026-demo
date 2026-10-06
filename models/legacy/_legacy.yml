@@ -1,0 +1,45 @@
+models:
+  - name: rpt_agency_title_payroll
+    description: Headcount and annualized payroll by agency and title.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: agency_code
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: agency_name
+        data_type: varchar
+      - name: agency_group
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["UNIFORMED", "EDUCATION", "HEALTH & HUMAN SVCS", "DISTRICT ATTORNEYS", "OTHER"]
+      - name: title_code
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: title_desc
+        data_type: varchar
+      - name: headcount
+        data_type: bigint
+      - name: total_annual_salary
+        data_type: decimal(14, 2)
+      - name: salary_band
+        data_type: varchar
+    data_tests:
+      # One row per agency and title
+      - unique:
+          column_name: "agency_code || '-' || title_code"
+
+exposures:
+  - name: commissioners_dashboard
+    label: Commissioner's Dashboard
+    type: dashboard
+    maturity: high
+    owner:
+      name: Office of the Commissioner
+    depends_on:
+      - ref("rpt_agency_title_payroll")
