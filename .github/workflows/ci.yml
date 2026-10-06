@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      CI_SCHEMA_SUFFIX: pr_${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements.txt
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Download prod state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/prod_state
+          gh release download prod-state --pattern prod.duckdb --dir data
+          gh release download prod-state --pattern manifest.json --dir data/prod_state
+
+      - name: Build modified models
+        run: make ci
+
+      - name: Summarize
+        if: always()
+        run: python scripts/ci_summary.py >> "$GITHUB_STEP_SUMMARY"

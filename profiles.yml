@@ -6,4 +6,18 @@ civil_service:
       path: "{{ env_var('DBT_DUCKDB_PATH', 'data/dev.duckdb') }}"
       threads: 1
 
+    prod:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'data/prod.duckdb') }}"
+      schema: main
+      threads: 4
+
+    # Builds into an isolated schema inside the prod database, so deferred refs
+    # to unchanged models resolve to the prod tables.
+    ci:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'data/prod.duckdb') }}"
+      schema: "ci_{{ env_var('CI_SCHEMA_SUFFIX', 'local') }}"
+      threads: 4
+
   target: dev

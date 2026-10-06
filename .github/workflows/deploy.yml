@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write # to publish the prod-state release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements.txt
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Build prod
+        run: make prod
+
+      # A GitHub release stands in for the prod warehouse: CI downloads the
+      # database and manifest from here to compare against and defer to.
+      - name: Publish prod state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view prod-state >/dev/null 2>&1 || \
+            gh release create prod-state --title "Prod state" --notes "Latest prod build, updated on every deploy."
+          gh release upload prod-state data/prod.duckdb data/prod_state/manifest.json --clobber
