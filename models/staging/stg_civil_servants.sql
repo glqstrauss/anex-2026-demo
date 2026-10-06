@@ -5,4 +5,4 @@ select
 	_name as employee_name,
 	ttl as title_code,
 	pc as pay_class,
-	regexp_replace(sal_rate, '[$,]','', 'g')::double as salary_rate
+	regexp_replace(sal_rate, '[$,]','', 'g')::double as pay_rate
