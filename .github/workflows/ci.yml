@@ -31,7 +31,3 @@ jobs:
 
       - name: Build modified models
         run: make ci
-
-      - name: Summarize
-        if: always()
-        run: python scripts/ci_summary.py >> "$GITHUB_STEP_SUMMARY"
