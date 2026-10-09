@@ -7,6 +7,7 @@ SELECT
 	X.AGENCY_GROUP,
 	X.TITLE_CODE,
 	X.TITLE_DESC,
+	X.UNION_DESC,
 	X.HEADCOUNT,
 	X.TOTAL_ANNUAL_SALARY,
 	CASE
@@ -22,6 +23,7 @@ FROM (
 		B.AGENCY_GROUP,
 		B.TITLE_CODE,
 		B.TITLE_DESC,
+		B.UNION_DESC,
 		COUNT(*) AS headcount,
 		ROUND(SUM(B.ANNUAL_SALARY), 2)::DECIMAL(14, 2) AS total_annual_salary
 	FROM (
@@ -56,13 +58,22 @@ FROM (
 			SELECT
 				E.*,
 				T.TITLE_DESC,
+				T.UNION_DESC,
 				(SELECT MAX(T2.STANDARD_HOURS) FROM {{ ref("stg_civil_service_titles") }} T2 WHERE T2.TITLE_CODE = E.TITLE_CODE) AS std_hrs
 			FROM {{ ref("stg_civil_servants") }} E
-			JOIN (SELECT DISTINCT TITLE_CODE, TITLE_DESC FROM {{ ref("stg_civil_service_titles") }}) T
+			-- one row per title: some titles are represented by more than one union
+			JOIN (
+				SELECT
+					TITLE_CODE,
+					ANY_VALUE(TITLE_DESC) AS title_desc,
+					STRING_AGG(DISTINCT UNION_DESC, '; ' ORDER BY UNION_DESC) AS union_desc
+				FROM {{ ref("stg_civil_service_titles") }}
+				GROUP BY TITLE_CODE
+			) T
 				ON E.TITLE_CODE = T.TITLE_CODE
 			WHERE 1 = 1
 			-- AND E.PAY_CLASS <> 'S'
 		) A
 	) B
-	GROUP BY 1, 2, 3, 4, 5
+	GROUP BY 1, 2, 3, 4, 5, 6
 ) X
