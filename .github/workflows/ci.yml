@@ -11,15 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
-        run: |
-          uv venv
-          uv pip install -r requirements.txt
-          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+        run: pip install -r requirements.txt
 
       - name: Download prod state
         env:
@@ -29,5 +27,10 @@ jobs:
           gh release download prod-state --pattern prod.duckdb --dir data
           gh release download prod-state --pattern manifest.json --dir data/prod_state
 
-      - name: Build modified models
-        run: make ci
+      # Build only what changed (state:modified+) into the CI schema, and read
+      # everything else from prod (--defer --favor-state)
+      - name: Check SQL and contracts (no data)
+        run: dbt build --target ci --select state:modified+ --defer --favor-state --state data/prod_state --empty
+
+      - name: Build and test modified models
+        run: dbt build --target ci --select state:modified+ --defer --favor-state --state data/prod_state

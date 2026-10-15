@@ -22,18 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
-        run: |
-          uv venv
-          uv pip install -r requirements.txt
-          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+        run: pip install -r requirements.txt
 
+      # --target-path saves dbt's output (including manifest.json) as the prod state
       - name: Build prod
-        run: make prod
+        run: dbt build --target prod --target-path data/prod_state
 
       # A GitHub release stands in for the prod warehouse: CI downloads the
       # database and manifest from here to compare against and defer to.
