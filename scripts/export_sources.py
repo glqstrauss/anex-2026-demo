@@ -32,7 +32,7 @@ DATASETS = [
         fourfour="ye3c-m4ga",
         query="select * where calendar_year = '2024'",  # about 300k rows
     ),
-    OpenDataExportConfig(name="job_postings", fourfour="kpav-sd4t"),
+    # OpenDataExportConfig(name="job_postings", fourfour="kpav-sd4t"),
 ]
 
 
@@ -60,7 +60,9 @@ def main(
     api_key: str = typer.Option(envvar="OPEN_DATA_API_KEY"),
     api_key_secret: str = typer.Option(envvar="OPEN_DATA_API_KEY_SECRET"),
     http_proxy: str | None = typer.Option(default=None, envvar="HTTP_PROXY"),
-    snapshot_dir: Path = typer.Option(default=DEFAULT_SNAPSHOT_DIR, envvar="SNAPSHOT_DIR"),
+    snapshot_dir: Path = typer.Option(
+        default=DEFAULT_SNAPSHOT_DIR, envvar="SNAPSHOT_DIR"
+    ),
 ):
     """Snapshot NYC Open Data sources to Parquet files, one per dataset.
 
@@ -84,32 +86,24 @@ def main(
     for dataset in DATASETS:
         path = snapshot_dir / f"{dataset.name}.parquet"
         typer.echo(f"Exporting {dataset.name} from {dataset.url} to {path}")
-        conn.execute(
-            f"""
+        conn.execute(f"""
             COPY (SELECT * FROM read_csv('{dataset.url}', normalize_names=true))
             TO '{path}' (
                 FORMAT parquet,
                 COMPRESSION zstd,
                 KV_METADATA {{source_url: '{dataset.url}', exported_at: '{datetime.now().isoformat()}'}}
             )
-            """
-        )
+            """)
 
     typer.echo("Export complete.")
-    typer.echo(
-        str(
-            conn.query(
-                f"""
+    typer.echo(str(conn.query(f"""
                 select
                     parse_filename(filename, true) as dataset,
                     count(*) as row_count
                 from read_parquet('{snapshot_dir}/*.parquet', filename=true, union_by_name=true)
                 group by all
                 order by dataset
-                """
-            )
-        )
-    )
+                """)))
 
 
 if __name__ == "__main__":
