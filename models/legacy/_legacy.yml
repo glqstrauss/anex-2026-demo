@@ -23,6 +23,10 @@ models:
           - not_null
       - name: title_desc
         data_type: varchar
+      - name: union_desc
+        data_type: varchar
+        data_tests:
+          - not_null
       - name: headcount
         data_type: bigint
       - name: total_annual_salary
