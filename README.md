@@ -2,4 +2,4 @@
 
 A tiny dbt project + CI/CD setup.
 
-See [./presentation/demo.ipynb](./presentation/demo.ipynb) for a run-through.
+See [./demo.ipynb](./demo.ipynb) for a run-through.
